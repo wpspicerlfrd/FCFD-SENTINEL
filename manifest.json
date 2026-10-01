@@ -1,0 +1,23 @@
+{
+  "id": "/FCFD-SENTINEL/",
+  "name": "FCFD SENTINEL",
+  "short_name": "SENTINEL",
+  "description": "Fern Creek Fire & EMS District Boundary Verifier",
+  "start_url": "./index.html?app=fcfd",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#003366",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
