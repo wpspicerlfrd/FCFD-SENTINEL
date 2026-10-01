@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCFD SENTINEL - District Boundary Verifier</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f6f8;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        /* Header & Navigation */
+        .header h1 {
+            font-size: 20px;
+            color: #003366;
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .header p {
+            font-size: 11px;
+            color: #666;
+            margin: 2px 0 15px 0;
+            text-transform: uppercase;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 15px;
+            border-bottom: 2px solid #eef1f5;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            font-size: 13px;
+            color: #555;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-tab.active {
+            color: #003366;
+            border-bottom: 2px solid #003366;
+            background-color: #eef2f7;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 5px;
+        }
+
+        .section-desc {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        /* Search Box Layout */
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .search-box input {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        /* Inline Clear Button */
+        button.btn-clear-inline {
+            background-color: #e2e8f0;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            padding: 12px 14px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            display: none;
+            white-space: nowrap;
+        }
+
+        button.btn-clear-inline:hover {
+            background-color: #cbd5e1;
+            color: #0f172a;
+        }
+
+        button.action-btn { 
+            background-color: #003366; 
+            color: white; 
+            border: none; 
+            padding: 12px 16px; 
+            font-size: 14px; 
+            font-weight: 600; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: background 0.2s; 
+            white-space: nowrap;
+        }
+
+        button.action-btn:hover {
+            background-color: #002244;
+        }
+
+        /* Status Result Banner */
+        #statusBanner {
+            display: none;
+            padding: 14px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .in-district {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+
+        .out-district {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+
+        .btn-directions {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #003366;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .btn-directions:hover {
+            background-color: #002244;
+        }
+
+        /* Map Container */
+        #map {
+            width: 100%;
+            height: 420px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        /* History Table */
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .history-title {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .history-clear-btn {
+            color: #dc3545;
+            font-size: 12px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-weight: 600;
+        }
+
+        .history-list {
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+            padding: 8px 12px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-in {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .badge-out {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+
+        /* Share Modal Styling */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 8px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #003366;
+        }
+
+        .modal-body {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .share-btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .btn-modal {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: #003366;
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #333;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        #qrCodeContainer img {
+            margin: 10px auto;
+            border: 1px solid #ddd;
+            padding: 8px;
+            border-radius: 6px;
+        }
+    </style>
+
+    <!-- Load coordinates file -->
+    <script src="geofence.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <h1>FCFD SENTINEL</h1>
+        <p>Fern Creek Fire & EMS District Boundary Verifier</p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <span class="nav-tab active">District Verifier</span>
+        <span class="nav-tab" onclick="openShareModal()">Share App</span>
+    </div>
+
+    <!-- Search Section -->
+    <div class="section-title">District Boundary Verification</div>
+    <div class="section-desc">Enter an address to verify if it falls within the FCFD service area.</div>
+
+    <div class="search-box">
+        <input id="autocomplete" type="search" placeholder="Enter address to check...">
+        <button id="clearAddressBtn" class="btn-clear-inline" onclick="clearAddressInput()" title="Clear Address">✖ Clear</button>
+        <button class="action-btn" onclick="verifyAddress()">Verify Address</button>
+    </div>
+
+    <!-- Status Result -->
+    <div id="statusBanner">
+        <div id="statusText"></div>
+        <a id="directionsBtn" class="btn-directions" target="_blank" style="display:none;">📍 Get Directions to Address</a>
+    </div>
+
+    <!-- Google Map -->
+    <div id="map"></div>
+
+    <!-- Search History -->
+    <div class="history-header">
+        <span class="history-title">Recent Boundary Searches</span>
+        <button class="history-clear-btn" onclick="clearHistory()">Clear History</button>
+    </div>
+    <div class="history-list" id="historyList">
+        <div style="font-size: 12px; color: #888; text-align: center; padding: 10px;">No recent searches</div>
+    </div>
+</div>
+
+<!-- Share App Modal -->
+<div id="shareModal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeShareModal()">&times;</span>
+        <div class="modal-title">Share FCFD SENTINEL</div>
+        <div class="modal-body">Scan the QR code or copy the web link to share this verification tool.</div>
+        
+        <div id="qrCodeContainer"></div>
+
+        <div class="share-btn-group">
+            <button class="btn-modal btn-primary" onclick="copyAppUrl()">📋 Copy Link</button>
+            <button class="btn-modal btn-secondary" id="nativeShareBtn" onclick="triggerNativeShare()" style="display:none;">📤 Share</button>
+        </div>
+        <div id="copyAlert" style="font-size: 12px; color: #0f5132; display: none; font-weight: 600;">Link copied to clipboard!</div>
+    </div>
+</div>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then((registration) => {
+                    registration.update();
+                })
+                .catch((error) => {
+                    console.error('Service Worker registration failed:', error);
+                });
+        });
+    }
+
+    let map;
+    let geofencePolygon;
+    let marker;
+    let autocomplete;
+
+    function initMap() {
+        if (typeof geofenceCoords === 'undefined' || !geofenceCoords.length) {
+            alert("Geofence coordinates not found. Please verify geofence.js is in the repository root.");
+            return;
+        }
+
+        // Initialize Map
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 10,
+            center: { lat: 38.15, lng: -85.6 },
+            mapId: "DEMO_MAP_ID"
+        });
+
+        // Draw Geofence Polygon
+        geofencePolygon = new google.maps.Polygon({
+            paths: geofenceCoords,
+            strokeColor: "#003366",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: "#1a5276",
+            fillOpacity: 0.35,
+        });
+        geofencePolygon.setMap(map);
+
+        // Auto-fit bounds
+        const bounds = new google.maps.LatLngBounds();
+        geofenceCoords.forEach(coord => bounds.extend(coord));
+        map.fitBounds(bounds);
+
+        // Setup Autocomplete
+        const input = document.getElementById("autocomplete");
+        autocomplete = new google.maps.places.Autocomplete(input);
+        autocomplete.bindTo("bounds", map);
+        autocomplete.addListener("place_changed", verifyAddress);
+
+        // Monitor input field directly
+        input.addEventListener("input", toggleClearButton);
+        input.addEventListener("keyup", toggleClearButton);
+    }
+
+    function toggleClearButton() {
+        const input = document.getElementById("autocomplete");
+        const clearBtn = document.getElementById("clearAddressBtn");
+        if (input.value && input.value.trim().length > 0) {
+            clearBtn.style.display = "inline-block";
+        } else {
+            clearBtn.style.display = "none";
+        }
+    }
+
+    function clearAddressInput() {
+        const input = document.getElementById("autocomplete");
+        const clearBtn = document.getElementById("clearAddressBtn");
+        const banner = document.getElementById("statusBanner");
+
+        input.value = "";
+        clearBtn.style.display = "none";
+        banner.style.display = "none";
+
+        if (marker) {
+            marker.map = null;
+        }
+
+        // Reset map view
+        const bounds = new google.maps.LatLngBounds();
+        geofenceCoords.forEach(coord => bounds.extend(coord));
+        map.fitBounds(bounds);
+
+        input.focus();
+    }
+
+    function verifyAddress() {
+        const place = autocomplete.getPlace();
+
+        if (!place || !place.geometry || !place.geometry.location) {
+            alert("Please select a valid address from the dropdown list.");
+            return;
+        }
+
+        const location = place.geometry.location;
+
+        document.getElementById("clearAddressBtn").style.display = "inline-block";
+
+        // Center map on search location
+        map.setCenter(location);
+        map.setZoom(15);
+
+        // Update Marker
+        if (marker) marker.map = null;
+        marker = new google.maps.marker.AdvancedMarkerElement({
+            position: location,
+            map: map,
+            title: place.formatted_address
+        });
+
+        // Check if point is inside Polygon
+        const isInside = google.maps.geometry.poly.containsLocation(location, geofencePolygon);
+        
+        // Show Status Banner & Navigation Button
+        const banner = document.getElementById("statusBanner");
+        const statusText = document.getElementById("statusText");
+        const directionsBtn = document.getElementById("directionsBtn");
+        
+        banner.style.display = "block";
+        if (isInside) {
+            banner.className = "in-district";
+            statusText.innerHTML = "✅ IN DISTRICT: Address is WITHIN the FCFD service area.";
+        } else {
+            banner.className = "out-district";
+            statusText.innerHTML = "❌ OUT OF DISTRICT: Address is OUTSIDE the FCFD service area.";
+        }
+
+        // Build Navigation URL
+        const encodedAddress = encodeURIComponent(place.formatted_address);
+        directionsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
+        directionsBtn.style.display = "inline-block";
+
+        // Add to search history
+        addSearchHistory(place.formatted_address, isInside);
+    }
+
+    function addSearchHistory(address, isInside) {
+        const historyList = document.getElementById("historyList");
+        if (historyList.children[0] && historyList.children[0].innerText === "No recent searches") {
+            historyList.innerHTML = "";
+        }
+
+        const item = document.createElement("div");
+        item.className = "history-item";
+        item.innerHTML = `
+            <span>${address}</span>
+            <span class="badge ${isInside ? 'badge-in' : 'badge-out'}">${isInside ? 'IN DISTRICT' : 'OUT OF DISTRICT'}</span>
+        `;
+        historyList.prepend(item);
+    }
+
+    function clearHistory() {
+        document.getElementById("historyList").innerHTML = 
+            '<div style="font-size: 12px; color: #888; text-align: center; padding: 10px;">No recent searches</div>';
+    }
+
+    /* Share App Functions */
+    function openShareModal() {
+        const modal = document.getElementById("shareModal");
+        const qrContainer = document.getElementById("qrCodeContainer");
+        const currentUrl = window.location.href;
+
+        qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}" alt="App QR Code" />`;
+
+        if (navigator.share) {
+            document.getElementById("nativeShareBtn").style.display = "inline-block";
+        }
+
+        modal.style.display = "flex";
+    }
+
+    function closeShareModal() {
+        document.getElementById("shareModal").style.display = "none";
+        document.getElementById("copyAlert").style.display = "none";
+    }
+
+    function copyAppUrl() {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            const alert = document.getElementById("copyAlert");
+            alert.style.display = "block";
+            setTimeout(() => { alert.style.display = "none"; }, 3000);
+        });
+    }
+
+    function triggerNativeShare() {
+        if (navigator.share) {
+            navigator.share({
+                title: 'FCFD SENTINEL',
+                text: 'Check addresses against the Fern Creek Fire & EMS District Boundary.',
+                url: window.location.href
+            }).catch(() => {});
+        }
+    }
+</script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBCnFOrSS9cHJjJOKQ8Nsp0unHZs_IsYu0&libraries=places,geometry,marker&v=weekly&callback=initMap" async defer></script>
+
+</body>
+</html>
