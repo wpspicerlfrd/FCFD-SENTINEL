@@ -323,7 +323,7 @@
         }
     </style>
 
-    <!-- Load coordinates file -->
+    <!-- External coordinates file -->
     <script src="geofence.js"></script>
 </head>
 <body>
@@ -429,7 +429,7 @@
         });
         geofencePolygon.setMap(map);
 
-        // Auto-fit bounds
+        // Auto-fit bounds on load
         const bounds = new google.maps.LatLngBounds();
         geofenceCoords.forEach(coord => bounds.extend(coord));
         map.fitBounds(bounds);
@@ -440,7 +440,7 @@
         autocomplete.bindTo("bounds", map);
         autocomplete.addListener("place_changed", verifyAddress);
 
-        // Monitor input field directly
+        // Monitor typing/pasting
         input.addEventListener("input", toggleClearButton);
         input.addEventListener("keyup", toggleClearButton);
     }
