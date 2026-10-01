@@ -404,6 +404,7 @@
     let geofencePolygon;
     let marker;
     let autocomplete;
+    let geocoder;
 
     function initMap() {
         if (typeof geofenceCoords === 'undefined' || !geofenceCoords.length) {
@@ -413,10 +414,12 @@
 
         // Initialize Map
         map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 10,
+            zoom: 11,
             center: { lat: 38.15, lng: -85.6 },
             mapId: "DEMO_MAP_ID"
         });
+
+        geocoder = new google.maps.Geocoder();
 
         // Draw Geofence Polygon
         geofencePolygon = new google.maps.Polygon({
@@ -438,7 +441,12 @@
         const input = document.getElementById("autocomplete");
         autocomplete = new google.maps.places.Autocomplete(input);
         autocomplete.bindTo("bounds", map);
-        autocomplete.addListener("place_changed", verifyAddress);
+        autocomplete.addListener("place_changed", () => {
+            const place = autocomplete.getPlace();
+            if (place && place.geometry && place.geometry.location) {
+                processVerification(place.geometry.location, place.formatted_address || place.name);
+            }
+        });
 
         // Monitor typing/pasting
         input.addEventListener("input", toggleClearButton);
@@ -477,15 +485,26 @@
     }
 
     function verifyAddress() {
+        const input = document.getElementById("autocomplete").value;
         const place = autocomplete.getPlace();
 
-        if (!place || !place.geometry || !place.geometry.location) {
-            alert("Please select a valid address from the dropdown list.");
-            return;
+        if (place && place.geometry && place.geometry.location) {
+            processVerification(place.geometry.location, place.formatted_address || place.name);
+        } else if (input.trim() !== "") {
+            // Fallback to Geocoder if typed without selecting dropdown option
+            geocoder.geocode({ address: input }, (results, status) => {
+                if (status === "OK" && results[0]) {
+                    processVerification(results[0].geometry.location, results[0].formatted_address);
+                } else {
+                    alert("Could not locate address. Please check spelling or select from the dropdown menu.");
+                }
+            });
+        } else {
+            alert("Please enter an address to verify.");
         }
+    }
 
-        const location = place.geometry.location;
-
+    function processVerification(location, formattedAddress) {
         document.getElementById("clearAddressBtn").style.display = "inline-block";
 
         // Center map on search location
@@ -497,7 +516,7 @@
         marker = new google.maps.marker.AdvancedMarkerElement({
             position: location,
             map: map,
-            title: place.formatted_address
+            title: formattedAddress
         });
 
         // Check if point is inside Polygon
@@ -518,12 +537,12 @@
         }
 
         // Build Navigation URL
-        const encodedAddress = encodeURIComponent(place.formatted_address);
+        const encodedAddress = encodeURIComponent(formattedAddress);
         directionsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
         directionsBtn.style.display = "inline-block";
 
         // Add to search history
-        addSearchHistory(place.formatted_address, isInside);
+        addSearchHistory(formattedAddress, isInside);
     }
 
     function addSearchHistory(address, isInside) {
