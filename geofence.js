@@ -1620,7 +1620,6 @@ const geofencePolygons = [
  { lat: 38.235947, lng: -85.652537 },
  { lat: 38.236957, lng: -85.65194 },
  { lat: 38.238223, lng: -85.65173 }
-  ]
 ],
   // Polygon 4
   [
@@ -1709,7 +1708,6 @@ const geofencePolygons = [
  { lat: 38.209861, lng: -85.722357 },
  { lat: 38.21036, lng: -85.722686 },
  { lat: 38.210528, lng: -85.72269 }
-  ]
 ],
   // Polygon 5
   [
@@ -1783,5 +1781,4 @@ const geofencePolygons = [
  { lat: 38.212657, lng: -85.736719 },
  { lat: 38.212825, lng: -85.736722 },
  { lat: 38.214073, lng: -85.737599 }
-  ]
 ];
