@@ -1,5 +1,10 @@
-const geofenceCoords = [
-  { lat: 38.205719, lng: -85.680424 },
+// geofence.js - Multi-Polygon Geofence Boundary Coordinates
+// Auto-generated from Fern Creek V7 (GeoJSON / KMZ)
+
+const geofencePolygons = [
+  // Feature 1: FCFD Service Area (1,439 points)
+  [
+    { lat: 38.205719, lng: -85.680424 },
   { lat: 38.203819, lng: -85.684112 },
   { lat: 38.202655, lng: -85.68665 },
   { lat: 38.202275, lng: -85.688464 },
@@ -1368,4 +1373,5 @@ const geofenceCoords = [
   { lat: 38.219681, lng: -85.655615 },
   { lat: 38.211723, lng: -85.670802 },
   { lat: 38.210397, lng: -85.673141 }
+  ]
 ];
